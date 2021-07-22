@@ -83,12 +83,20 @@ def main(args):
         out = ssh(server, "nvidia-smi", args.password)
         server_gpu_info = parse_nvidia_smi(out)
         av_num = 0
+        total_num = len(server_gpu_info["gpus"])
+        total_util = 0
         for gpu in server_gpu_info["gpus"]:
             if gpu[1][0] == 0:
                 av_num += 1
+            else:
+                total_util += gpu[2]
 
-        print("[{}] Available/Total: {}/{}".format(server, av_num, len(server_gpu_info["gpus"])))
-
+        ret = "[{}] Available/Total: {}/{}\tGPU Name: {}\tGPU Mem: {}Mib".format(
+            server, av_num, total_num, server_gpu_info["gpus"][0][0], server_gpu_info["gpus"][0][1][1])
+        if av_num != total_num:
+            avg_util = total_util / (total_num - av_num)
+            ret = "{}\tAVG. GPU-Util: {}%".format(ret, avg_util)
+        print(ret)
 
 if __name__ == "__main__":
     args = parse_args()
